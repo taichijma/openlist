@@ -11,13 +11,14 @@ CLI for [OpenList](https://github.com/OpenListTeam/OpenList) (AList-compatible) 
 
 ## Install
 
-```bash
-git clone git@github.com:0xtaichim/openlist.git
-cd openlist
-go build -o openlist .
-```
+Download a binary from [GitHub Releases](https://github.com/taichijma/openlist/releases/latest).
 
-Requires Go 1.23+.
+Assets are `openlist_<tag>_<os>_<arch>.tar.gz`, or `.zip` on Windows. `<os>` is `linux`, `darwin`, or `windows`. `<arch>` is `amd64` or `arm64`. Verify `checksums.txt` from the same release, then put `openlist` on `PATH`.
+
+```bash
+install -m 0755 openlist "$HOME/.local/bin/openlist"
+openlist --version
+```
 
 ## Configuration
 
@@ -44,6 +45,12 @@ openlist fs list --path /
 openlist fs get --path /Movies
 openlist strm --src /Movies --dst /STRM --base-url https://example.com
 openlist strm --src /Movies --dst ./strm --dst-type local --base-url https://example.com --dry-run
+```
+
+## Agents
+
+```text
+Download and install the openlist-cli skill from https://github.com/taichijma/openlist/tree/main/skills/openlist-cli.
 ```
 
 ## Release
