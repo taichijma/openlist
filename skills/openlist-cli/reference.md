@@ -8,15 +8,13 @@ Identify the binary with `openlist --help`. The text starts with "OpenList CLI i
 
 ## version
 
-There is no `version` subcommand. Root `--version` and `-v` print to stdout:
+`openlist --version` and `openlist -v` print to stdout. A release binary prints its tag:
 
 ```text
-openlist version dev
+openlist version v0.1.0
 ```
 
-A binary installed from GitHub Releases prints that tag, for example `openlist version v0.1.0`. `openlist version dev` is not a release install. Do not compile one.
-
-The flag is handled before config is read, so it succeeds when the config file is invalid and exits 0. It is not a persistent flag. `openlist fs --version` fails with `unknown flag: --version`. On `config set`, `-v` belongs to that subcommand.
+The flag is handled before config is read, so it succeeds when the config file is invalid and exits 0. Run it on the root command. A subcommand reports `unknown flag: --version`. On `config set`, `-v` is the value to store.
 
 ## config
 
@@ -93,7 +91,7 @@ Each `content` object has `id`, `path`, `name`, `size`, `is_dir`, `modified`, `c
 | `--password` | | omitted when empty | `password` |
 | `--force-root` | | omitted when false | `force_root` |
 
-Stdout is a JSON array of `{"name":"...","path":"..."}`. This is the server directory endpoint. This client does not walk the tree itself.
+Stdout is a JSON array of `{"name":"...","path":"..."}` for that path.
 
 ### fs get
 
@@ -111,7 +109,7 @@ Stdout is a JSON array of `{"name":"...","path":"..."}`. This is the server dire
 | `--page` | | `1` | `page` |
 | `--per-page` | | `30` | `per_page` |
 
-Stdout is `{"content":[...],"total":N}`. This client does not define what `scope` means. A non-zero value is forwarded as-is. When search is disabled on the server, the failure text is the server `message`.
+Stdout is `{"content":[...],"total":N}`. `--scope` is forwarded as an integer, and `0` is omitted from the request body. A disabled search index returns the server `message` as the error.
 
 ### fs mkdir
 
@@ -121,7 +119,7 @@ Stdout is `{"content":[...],"total":N}`. This client does not define what `scope
 Directory created successfully
 ```
 
-The client does not create missing parents one level at a time.
+`mkdir` creates the path given in `--path`.
 
 ### fs rename
 
@@ -147,7 +145,7 @@ Success stdout is `Copied successfully` or `Moved successfully`.
 
 ### fs remove
 
-`POST /api/fs/remove`. `--dir` / `-d` is the directory. `--names` / `-n` lists basenames in it, with the same splitting rules as copy. A directory basename is allowed. There is no recursive flag. Success stdout:
+`POST /api/fs/remove`. `--dir` / `-d` is the directory. `--names` / `-n` lists basenames in it, with the same splitting rules as copy. A directory basename is allowed. Success stdout:
 
 ```text
 Removed successfully
@@ -170,8 +168,6 @@ Success stdout:
 ```text
 Download task added successfully
 ```
-
-There is no command to list or cancel tasks.
 
 ## strm
 
@@ -204,7 +200,7 @@ A direct link is `<base-url>/d` plus the path with each segment percent-encoded.
 
 `--sign` uses `sign` from `list` when it is present. Otherwise it calls `POST /api/fs/get`. An empty final signature leaves the link without a query string.
 
-File content is the direct link plus one newline. Remote write is `PUT /api/fs/put` with `Content-Type: application/octet-stream`. The `File-Path` header is `PathEscape` of the whole target path. This client does not create the remote parent. Without overwrite, a successful `get` is treated as "already exists" and fails with `target exists: <path> (use --overwrite)`. A failed `get` continues to `put`, so an auth error appears again on `put`.
+File content is the direct link plus one newline. Remote write is `PUT /api/fs/put` with `Content-Type: application/octet-stream`. The `File-Path` header is `PathEscape` of the whole target path. Create the remote parent with `fs mkdir` first. Without `--overwrite`, a successful `get` stops with `target exists: <path> (use --overwrite)`. A `get` error continues into `put`.
 
 Local writes use the operating-system path. Parent directories are mode `0755` and files are mode `0644`. An existing file without overwrite returns the same `target exists` error.
 
@@ -227,7 +223,7 @@ A real write prints only the final `Generated N .strm files`. `N` includes files
 }
 ```
 
-When the config file exists but is invalid YAML, every real subcommand fails. Flags cannot bypass it:
+When the config file exists but is invalid YAML, the subcommand fails. Replace the file with valid YAML, then run the command again:
 
 ```text
 failed to load config: failed to read config file: ...
@@ -261,4 +257,4 @@ Point one command at another server:
 openlist --url http://other:5244 --token '<token>' fs get --path /Movies
 ```
 
-Release sha256 lines are in that release's `checksums.txt`, produced by `sha256sum`. Assets cover `linux`, `darwin`, and `windows`, each with `amd64` and `arm64`. Download them from `https://github.com/taichijma/openlist/releases/download/<tag>/`. `dist/` in a checkout is local release-script output and is not an install step.
+Release sha256 lines are in that release's `checksums.txt`, produced by `sha256sum`. Assets cover `linux`, `darwin`, and `windows`, each with `amd64` and `arm64`. Download them from `https://github.com/taichijma/openlist/releases/download/<tag>/`.

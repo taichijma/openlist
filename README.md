@@ -11,7 +11,7 @@ CLI for [OpenList](https://github.com/OpenListTeam/OpenList) (AList-compatible) 
 
 ## Install
 
-Download a binary from [GitHub Releases](https://github.com/taichijma/openlist/releases/latest). Do not clone this repository to compile it.
+Download a binary from [GitHub Releases](https://github.com/taichijma/openlist/releases/latest).
 
 Assets are `openlist_<tag>_<os>_<arch>.tar.gz`, or `.zip` on Windows. `<os>` is `linux`, `darwin`, or `windows`. `<arch>` is `amd64` or `arm64`. Verify `checksums.txt` from the same release, then put `openlist` on `PATH`.
 
