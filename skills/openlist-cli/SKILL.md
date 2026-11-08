@@ -1,6 +1,6 @@
 ---
 name: openlist-cli
-description: Installs, uninstalls, configures, and operates the openlist client CLI (config, fs, strm, --version) for OpenList and AList-compatible servers. Use when installing a GitHub Release archive or a source build, removing the openlist binary, editing ~/.config/openlist/config.yaml, OPENLIST_URL, or OPENLIST_TOKEN, or running list, dirs, get, search, mkdir, rename, copy, move, remove, offline download, or .strm generation.
+description: Installs, uninstalls, configures, and operates the openlist client CLI (config, fs, strm, --version) for OpenList and AList-compatible servers. Use when installing a binary from GitHub Releases, removing the openlist binary, editing ~/.config/openlist/config.yaml, OPENLIST_URL, or OPENLIST_TOKEN, or running list, dirs, get, search, mkdir, rename, copy, move, remove, offline download, or .strm generation.
 ---
 
 # OpenList CLI
@@ -23,11 +23,22 @@ The text must contain "OpenList CLI is a command line interface", and Available 
 
 ## Install
 
-Install the matching GitHub Release archive when one exists. Build the current checkout when there is no release or the task needs the current commit. Do not create a tag or trigger a release in order to install.
+Install the binary from GitHub Releases. Do not clone the repository, and do not run `go build`, `go install`, or `go run` to produce a binary. Do not download the "Source code" archives attached to a release. Do not create a tag or start a release in order to install.
 
-Release assets are named `openlist_<tag>_<os>_<arch>.tar.gz`. Windows assets are `.zip` files with the same stem. `<tag>` includes the leading `v`, for example `openlist_v0.1.0_linux_amd64.tar.gz`. The file inside is `openlist`, or `openlist.exe` on Windows. The only platforms are `linux`, `darwin`, and `windows`, each with `amd64` and `arm64`. `uname -m` value `x86_64` is `amd64`. `aarch64` is `arm64`.
+Releases: https://github.com/taichijma/openlist/releases/latest
 
-Download the archive and the `checksums.txt` from the same release. Check the sha256 before extracting. If the destination path already exists, run `--help` on that file and choose another name when it is not this client.
+Use the latest stable release. A pre-release is only for an explicit request. Read its tag, then download the one asset that matches this machine plus `checksums.txt` from that same release.
+
+Asset names are `openlist_<tag>_<os>_<arch>.tar.gz`. Windows assets are `.zip` files with the same stem. `<tag>` includes the leading `v`. `<os>` is `linux`, `darwin`, or `windows`. `<arch>` is `amd64` or `arm64`. `uname -m` value `x86_64` is `amd64`. `aarch64` is `arm64`. For tag `v0.1.0`, a Linux x86_64 machine downloads:
+
+```text
+https://github.com/taichijma/openlist/releases/download/v0.1.0/openlist_v0.1.0_linux_amd64.tar.gz
+https://github.com/taichijma/openlist/releases/download/v0.1.0/checksums.txt
+```
+
+Replace `v0.1.0` with the latest tag. The general form is `https://github.com/taichijma/openlist/releases/download/<tag>/openlist_<tag>_<os>_<arch>.tar.gz`. Check the asset's sha256 against its line in `checksums.txt` before extracting. The archive contains `openlist`, or `openlist.exe` on Windows.
+
+If the destination already exists, run `--help` on that file and choose another name when it is not this client.
 
 ```bash
 install -m 0755 openlist "$HOME/.local/bin/openlist"
@@ -35,28 +46,7 @@ openlist --version
 openlist --help
 ```
 
-A release binary prints the tag from `--version`. A source build prints `dev`.
-
-Build in an existing checkout. Do not clone again.
-
-```bash
-go version
-go build -o openlist .
-./openlist --version
-./openlist --help
-```
-
-Go 1.23 or newer is required. The `toolchain` in `go.mod` is `go1.24.12`. The default `GOTOOLCHAIN=auto` downloads that toolchain when needed. The first build needs module downloads.
-
-The module path in `go.mod` is `openlist`. Do not run `go install github.com/.../openlist@latest`. To place a source build on `PATH`, run `go install .` from the repository root. The binary is `$GOBIN/openlist`, or `$(go env GOPATH)/bin/openlist` when `GOBIN` is unset. That binary is also version `dev`. `go install` does not change `PATH`.
-
-To copy the repo binary onto `PATH` without `go install`:
-
-```bash
-install -m 0755 ./openlist "$HOME/.local/bin/openlist"
-```
-
-For a one-off run, put program arguments after the package path: `go run . fs list --path /`. `go run` prints `dev` as well.
+`--version` must print the release tag, for example `openlist version v0.1.0`. `openlist version dev` is not a release binary. Delete it and install from Releases again. If Releases has no published release, stop and say so.
 
 The version flags exist only on the root command: `openlist --version` or `openlist -v`. Stdout is `openlist version <version>`, the exit code is 0, and config is not read. Subcommands reject `--version`. On `config set`, `-v` is the value to store.
 
@@ -64,7 +54,7 @@ The version flags exist only on the root command: `openlist --version` or `openl
 
 There is no `uninstall` subcommand. Leave the server, its data directory, and its containers in place.
 
-1. Find candidates with `command -v openlist` and `./openlist` in the repo. Run `--help` on each file. Delete a file only when the help text contains both "OpenList CLI is a command line interface" and `strm`. A `go install` copy is `$GOBIN/openlist`, or `$(go env GOPATH)/bin/openlist` when `GOBIN` is unset. Also delete an extracted release binary, the downloaded archive, and `checksums.txt`. Leave the GitHub Release itself in place.
+1. Find candidates with `command -v openlist` and `"$HOME/.local/bin/openlist"`. Run `--help` on each file. Delete a file only when the help text contains both "OpenList CLI is a command line interface" and `strm`. Also delete the downloaded archive and `checksums.txt`. Leave the GitHub Release itself in place.
 2. When the uninstall includes credentials, delete the directory `"${XDG_CONFIG_HOME:-$HOME/.config}/openlist"`. Its `config.yaml` holds the token and is mode `0600`. Keep that directory when only the binary should be removed.
 3. When credentials are removed, delete only the `OPENLIST_URL` and `OPENLIST_TOKEN` lines from shell startup files and the repo `.env`. Remove a completion script only if one was added to a shell startup file.
 

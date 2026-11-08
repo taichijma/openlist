@@ -11,13 +11,14 @@ CLI for [OpenList](https://github.com/OpenListTeam/OpenList) (AList-compatible) 
 
 ## Install
 
-```bash
-git clone git@github.com:0xtaichim/openlist.git
-cd openlist
-go build -o openlist .
-```
+Download a binary from [GitHub Releases](https://github.com/taichijma/openlist/releases/latest). Do not clone this repository to compile it.
 
-Requires Go 1.23+.
+Assets are `openlist_<tag>_<os>_<arch>.tar.gz`, or `.zip` on Windows. `<os>` is `linux`, `darwin`, or `windows`. `<arch>` is `amd64` or `arm64`. Verify `checksums.txt` from the same release, then put `openlist` on `PATH`.
+
+```bash
+install -m 0755 openlist "$HOME/.local/bin/openlist"
+openlist --version
+```
 
 ## Configuration
 

@@ -14,7 +14,7 @@ There is no `version` subcommand. Root `--version` and `-v` print to stdout:
 openlist version dev
 ```
 
-`go build`, `go install .`, and `go run` keep the literal `dev`. The release workflow injects the tag with `-ldflags "-X openlist/cmd.Version=<tag>"`, for example `openlist version v0.1.0`.
+A binary installed from GitHub Releases prints that tag, for example `openlist version v0.1.0`. `openlist version dev` is not a release install. Do not compile one.
 
 The flag is handled before config is read, so it succeeds when the config file is invalid and exits 0. It is not a persistent flag. `openlist fs --version` fails with `unknown flag: --version`. On `config set`, `-v` belongs to that subcommand.
 
@@ -237,39 +237,28 @@ A missing file is normal. Defaults, environment variables, and flags are then us
 
 ## End-to-end sequence
 
-Replace `<token>` with the token supplied for the task. This assumes the binary is `./openlist` in the repo and the shell has neither `OPENLIST_URL` nor `OPENLIST_TOKEN`.
+Replace `<token>` with the token supplied for the task. `openlist` is the release binary on `PATH`. The shell has neither `OPENLIST_URL` nor `OPENLIST_TOKEN`.
 
 ```bash
-go build -o openlist .
-env -u OPENLIST_URL -u OPENLIST_TOKEN ./openlist config set url http://127.0.0.1:5244
-env -u OPENLIST_URL -u OPENLIST_TOKEN ./openlist config set token '<token>'
-./openlist config get url
-./openlist fs list --path /
-./openlist fs mkdir --path /STRM
-./openlist fs rename --path /Movies/old.mkv --name new.mkv
-./openlist fs copy --src /Movies --dst /Backup --names new.mkv
-./openlist fs move --src /Backup --dst /Archive --names new.mkv
-./openlist fs search --parent /Movies --keywords new
-./openlist fs download --path /Downloads --urls 'https://example.com/a.mkv'
-./openlist strm --src /Movies --dst /STRM --base-url https://example.com --dry-run
-./openlist strm --src /Movies --dst /STRM --base-url https://example.com --overwrite
-./openlist fs remove --dir /Archive --names new.mkv
+env -u OPENLIST_URL -u OPENLIST_TOKEN openlist config set url http://127.0.0.1:5244
+env -u OPENLIST_URL -u OPENLIST_TOKEN openlist config set token '<token>'
+openlist config get url
+openlist fs list --path /
+openlist fs mkdir --path /STRM
+openlist fs rename --path /Movies/old.mkv --name new.mkv
+openlist fs copy --src /Movies --dst /Backup --names new.mkv
+openlist fs move --src /Backup --dst /Archive --names new.mkv
+openlist fs search --parent /Movies --keywords new
+openlist fs download --path /Downloads --urls 'https://example.com/a.mkv'
+openlist strm --src /Movies --dst /STRM --base-url https://example.com --dry-run
+openlist strm --src /Movies --dst /STRM --base-url https://example.com --overwrite
+openlist fs remove --dir /Archive --names new.mkv
 ```
 
 Point one command at another server:
 
 ```bash
-./openlist --url http://other:5244 --token '<token>' fs get --path /Movies
+openlist --url http://other:5244 --token '<token>' fs get --path /Movies
 ```
 
-Release sha256 lines are in that release's `checksums.txt`, produced by `sha256sum`. Assets cover `linux`, `darwin`, and `windows`, each with `amd64` and `arm64`. `dist/` in the repo is local release-script output, is gitignored, and is not an install step.
-
-The README clone commands for a new checkout are:
-
-```bash
-git clone git@github.com:0xtaichim/openlist.git
-cd openlist
-go build -o openlist .
-```
-
-Use the clone URL from this repository's README. The module path remains `openlist`. Build inside the checkout.
+Release sha256 lines are in that release's `checksums.txt`, produced by `sha256sum`. Assets cover `linux`, `darwin`, and `windows`, each with `amd64` and `arm64`. Download them from `https://github.com/taichijma/openlist/releases/download/<tag>/`. `dist/` in a checkout is local release-script output and is not an install step.
