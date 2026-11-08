@@ -9,8 +9,9 @@ Thumbs.db
 *.swo
 *~
 
-# Cursor
-.cursor/
+# Cursor local state. The CLI skill under skills/ is part of the repo.
+.cursor/*
+!.cursor/skills/
 
 # Go binaries and plugins
 /openlist
