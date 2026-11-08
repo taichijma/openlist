@@ -49,7 +49,7 @@ openlist strm --src /Movies --dst ./strm --dst-type local --base-url https://exa
 ## Agents
 
 ```text
-Download and install the openlist-cli skill from https://github.com/taichijma/openlist/tree/main/.cursor/skills/openlist-cli into ~/.cursor/skills/openlist-cli.
+Download and install the openlist-cli skill from https://github.com/taichijma/openlist/tree/main/skills/openlist-cli.
 ```
 
 ## Release
