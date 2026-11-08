@@ -5,29 +5,29 @@ description: Installs, uninstalls, configures, and operates the openlist client 
 
 # OpenList CLI
 
-本仓库的 `openlist` 是 OpenList（AList 兼容）文件服务器的客户端。它不启动、不安装、不管理服务器进程。
+`openlist` in this repository is a client for an OpenList (AList-compatible) file server. It does not start, install, or manage the server process.
 
-命令与源码不一致时，以 `openlist <command> --help` 和 `cmd/`、`config/`、`client/`、`strm/` 为准，并更新本技能。字段、错误原文和示例见 [reference.md](reference.md)。
+When a command disagrees with this skill, trust `openlist <command> --help` and the packages `cmd/`, `config/`, `client/`, and `strm/`, then update the skill. Flags, response fields, and error strings are in [reference.md](reference.md).
 
-## 确认二进制
+## Identify the binary
 
-先确认将要执行的文件是这个客户端，而不是同名的 OpenList 服务器。
+Confirm the file is this client before running or replacing it. The OpenList server binary uses the same name.
 
 ```bash
 openlist --help
 ```
 
-正文要包含 “OpenList CLI is a command line interface”，并且 Available Commands 里有 `config`、`fs`、`strm`。`openlist fs --help` 只列出文件子命令，不能用来辨认二进制。帮助不符的同名文件是别的程序，不要覆盖，也不要把它当成这个客户端。
+The text must contain "OpenList CLI is a command line interface", and Available Commands must include `config`, `fs`, and `strm`. `openlist fs --help` lists only file subcommands, so it does not identify the binary. Leave a different program in place.
 
-配置文件损坏时，`openlist --help` 和 `openlist <command> --help` 仍可用。`openlist help <command>` 和 `openlist completion` 会先读配置，文件损坏时失败。
+`openlist --help` and `openlist <command> --help` still work when the config file is invalid. `openlist help <command>` and `openlist completion` load config first and fail on invalid YAML.
 
-## 安装
+## Install
 
-已有 GitHub Release 时，安装对应平台的归档。没有发布，或需要当前提交时，在已有检出里构建。不要为了安装去打标签或触发发布。
+Install the matching GitHub Release archive when one exists. Build the current checkout when there is no release or the task needs the current commit. Do not create a tag or trigger a release in order to install.
 
-发布资产名是 `openlist_<tag>_<os>_<arch>.tar.gz`，Windows 是同名 `.zip`。`<tag>` 带 `v`，例如 `openlist_v0.1.0_linux_amd64.tar.gz`。包内文件名是 `openlist`，Windows 是 `openlist.exe`。平台只有 `linux`、`darwin`、`windows` 与 `amd64`、`arm64` 的组合。`uname -m` 的 `x86_64` 对应 `amd64`，`aarch64` 对应 `arm64`。
+Release assets are named `openlist_<tag>_<os>_<arch>.tar.gz`. Windows assets are `.zip` files with the same stem. `<tag>` includes the leading `v`, for example `openlist_v0.1.0_linux_amd64.tar.gz`. The file inside is `openlist`, or `openlist.exe` on Windows. The only platforms are `linux`, `darwin`, and `windows`, each with `amd64` and `arm64`. `uname -m` value `x86_64` is `amd64`. `aarch64` is `arm64`.
 
-下载归档和同一次发布的 `checksums.txt`，核对 sha256 后再解压。目标路径上已经有文件时，先执行它的 `--help`；帮助不符时换一个文件名。
+Download the archive and the `checksums.txt` from the same release. Check the sha256 before extracting. If the destination path already exists, run `--help` on that file and choose another name when it is not this client.
 
 ```bash
 install -m 0755 openlist "$HOME/.local/bin/openlist"
@@ -35,9 +35,9 @@ openlist --version
 openlist --help
 ```
 
-发布包的 `--version` 打印该 tag。源码构建打印 `dev`。
+A release binary prints the tag from `--version`. A source build prints `dev`.
 
-已在本仓库检出、需要当前提交时直接构建，不要再克隆。
+Build in an existing checkout. Do not clone again.
 
 ```bash
 go version
@@ -46,40 +46,40 @@ go build -o openlist .
 ./openlist --help
 ```
 
-需要 Go 1.23 或更新。`go.mod` 的 `toolchain` 为 `go1.24.12`，默认的 `GOTOOLCHAIN=auto` 会在需要时下载该工具链。首次构建需要能拉取模块。
+Go 1.23 or newer is required. The `toolchain` in `go.mod` is `go1.24.12`. The default `GOTOOLCHAIN=auto` downloads that toolchain when needed. The first build needs module downloads.
 
-`go.mod` 的 module 路径是 `openlist`。不要执行 `go install github.com/.../openlist@latest`。需要装到 `PATH` 时，在仓库根目录执行 `go install .`，二进制落在 `$GOBIN`，未设置时为 `$(go env GOPATH)/bin/openlist`。这样装上的也是 `dev` 版本。`go install` 不会修改 `PATH`。
+The module path in `go.mod` is `openlist`. Do not run `go install github.com/.../openlist@latest`. To place a source build on `PATH`, run `go install .` from the repository root. The binary is `$GOBIN/openlist`, or `$(go env GOPATH)/bin/openlist` when `GOBIN` is unset. That binary is also version `dev`. `go install` does not change `PATH`.
 
-要放到 `PATH` 上、又不使用 `go install` 时：
+To copy the repo binary onto `PATH` without `go install`:
 
 ```bash
 install -m 0755 ./openlist "$HOME/.local/bin/openlist"
 ```
 
-一次性调试用 `go run . fs list --path /`，参数写在包路径之后。`go run` 同样打印 `dev`。
+For a one-off run, put program arguments after the package path: `go run . fs list --path /`. `go run` prints `dev` as well.
 
-版本标志只在根命令上：`openlist --version` 或 `openlist -v`。输出是 `openlist version <版本>`，退出码 0，而且不读取配置文件。子命令不接受 `--version`。`config set -v` 是要写入的值，不是版本。
+The version flags exist only on the root command: `openlist --version` or `openlist -v`. Stdout is `openlist version <version>`, the exit code is 0, and config is not read. Subcommands reject `--version`. On `config set`, `-v` is the value to store.
 
-## 卸载
+## Uninstall
 
-没有 `uninstall` 子命令。卸载客户端时不要删除服务器、其数据目录或容器。
+There is no `uninstall` subcommand. Leave the server, its data directory, and its containers in place.
 
-1. 用 `command -v openlist` 和仓库内 `./openlist` 找到候选文件。对每个候选执行 `--help`，只有同时出现 “OpenList CLI is a command line interface” 和 `strm` 时才删除。`go install` 的副本在 `$GOBIN`，未设置时为 `$(go env GOPATH)/bin/openlist`。发布包解压出来的副本、下载的归档和 `checksums.txt` 也一并删除。不要删除 GitHub Release 本身。
-2. 用户要求连同凭据一起卸载时，删除配置目录 `"${XDG_CONFIG_HOME:-$HOME/.config}/openlist"`。其中 `config.yaml` 含 token，权限 `0600`。只要求卸二进制时保留该目录。
-3. 凭据一并卸载时，从 shell 启动文件和仓库 `.env` 中删掉 `OPENLIST_URL`、`OPENLIST_TOKEN` 这两行，不要改写文件里的其他内容。补全脚本只有用户曾经写入 shell 启动文件时才需要移除。
+1. Find candidates with `command -v openlist` and `./openlist` in the repo. Run `--help` on each file. Delete a file only when the help text contains both "OpenList CLI is a command line interface" and `strm`. A `go install` copy is `$GOBIN/openlist`, or `$(go env GOPATH)/bin/openlist` when `GOBIN` is unset. Also delete an extracted release binary, the downloaded archive, and `checksums.txt`. Leave the GitHub Release itself in place.
+2. When the uninstall includes credentials, delete the directory `"${XDG_CONFIG_HOME:-$HOME/.config}/openlist"`. Its `config.yaml` holds the token and is mode `0600`. Keep that directory when only the binary should be removed.
+3. When credentials are removed, delete only the `OPENLIST_URL` and `OPENLIST_TOKEN` lines from shell startup files and the repo `.env`. Remove a completion script only if one was added to a shell startup file.
 
-卸完后，原路径上的 `--help` 不应再出现这个客户端。
+Afterward, `--help` on the old path must not show this client.
 
-## 配置
+## Configure
 
-生效顺序：默认值，然后配置文件，然后环境变量，然后本次显式传入的标志。后一层覆盖前一层。
+Later layers replace earlier ones: defaults, then the config file, then environment variables, then flags passed on this invocation.
 
-| 键 | 默认 | 环境变量 | 标志 |
+| Key | Default | Environment | Flags |
 | --- | --- | --- | --- |
-| `url` | `http://localhost:5244` | `OPENLIST_URL` | `--url`、`-u` |
-| `token` | 空 | `OPENLIST_TOKEN` | `--token`、`-t` |
+| `url` | `http://localhost:5244` | `OPENLIST_URL` | `--url`, `-u` |
+| `token` | empty | `OPENLIST_TOKEN` | `--token`, `-t` |
 
-配置文件：`$XDG_CONFIG_HOME/openlist/config.yaml`，未设置 `XDG_CONFIG_HOME` 时为 `~/.config/openlist/config.yaml`。`config set` 会创建目录 `0700`、文件 `0600`。键只有 `url` 和 `token`，大小写不敏感。
+The file is `$XDG_CONFIG_HOME/openlist/config.yaml`, or `~/.config/openlist/config.yaml` when `XDG_CONFIG_HOME` is unset. `config set` creates the directory at mode `0700` and the file at mode `0600`. The only keys are `url` and `token`. Key lookup is case-insensitive.
 
 ```bash
 env -u OPENLIST_URL -u OPENLIST_TOKEN openlist config set url http://localhost:5244
@@ -87,67 +87,67 @@ env -u OPENLIST_URL -u OPENLIST_TOKEN openlist config set token '<token>'
 openlist config get url
 ```
 
-`config set` 会把 `Load()` 的结果整份写回。环境变量里的 `url` 或 `token` 会一起进文件，即使这次只改另一个键。写文件前用 `env -u OPENLIST_URL -u OPENLIST_TOKEN`。`--url` 和 `--token` 不会被 `config set` 写进文件。
+`config set` writes the whole result of `Load()`. An `OPENLIST_URL` or `OPENLIST_TOKEN` value in the environment is saved even when the command changes the other key. Unset both variables before writing. `--url` and `--token` are not written by `config set`.
 
-`config get` 和 `config list` 显示的是本次生效值，包含环境和标志。`config list` 的 stdout 含明文 token。向用户汇报时只说明 token 是否非空，不粘贴 token。
+`config get` and `config list` print the effective values, including environment and flags. `config list` prints the token in plaintext. Report only whether the token is non-empty. Do not paste the token.
 
-空字符串不能作为 `config set` 的值。要清空 token，先卸掉相关环境变量，再改或删除配置文件。`config set` 读不到损坏的 YAML，不能用它修复。把损坏文件移走或改成合法 YAML 后重新 `config set`。`--url` 不能跳过损坏的配置文件。
+`config set` rejects an empty value. To clear the token, unset the environment variables, then edit or delete the file. `config set` cannot repair invalid YAML because it loads the file first. Move the broken file aside or replace it with valid YAML, then run `config set` again. `--url` does not skip a broken config file.
 
-`url` 会去掉首尾空白和末尾的 `/`，`https://` 会保留。token 只做首尾去空白，请求时原样放进 `Authorization` 头，不要加 `Bearer `。
+`url` loses leading and trailing space and trailing slashes. The `https://` scheme remains. `token` loses only leading and trailing space. The request sends it unchanged in the `Authorization` header. Do not add `Bearer `.
 
-单次命令需要另一台服务器时，在命令前加 `--url` 和 `--token`，不要为了一次调用改配置文件。未提供 token 时命令仍会发送，stderr 出现：
+For one command against another server, pass `--url` and `--token` in front of the subcommand. Leave the config file unchanged. With no token, the command is still sent and stderr contains:
 
 ```text
 Warning: No token provided. Operations might fail if auth is required.
 ```
 
-这行警告本身不是失败。退出码为 0 才算成功。
+That warning alone is not a failure. Exit code 0 is success.
 
-## 执行约定
+## Execution rules
 
-- 子命令的业务输出在 stdout。查询和 `config` 是缩进 JSON。`mkdir`、`rename`、`move`、`copy`、`remove`、`download` 是一行英文成功句。
-- 失败时退出码为 1，stdout 为 `{"error":"..."}`。警告在 stderr。
-- `SIGINT` 和 `SIGTERM` 会取消正在进行的请求。HTTP 超时固定 30 秒，没有对应标志。
-- 远程路径使用 `/`，传给 `fs` 时写绝对路径。`fs` 不会把 `Movies` 改成 `/Movies`。
-- `move`、`copy`、`remove` 的 `--names` 是源目录下的基名，不是完整路径。名字含逗号、引号或换行时，每个名字单独一个 `--names`，因为该标志按 CSV 拆分。
-- `download` 的地址标志是 `--urls`，没有短标志。`-u` 永远是服务器 URL。
-- `list` 和 `search` 只返回一页。`total` 大于本页 `content` 时递增 `--page`，直到收齐或本页为空。`strm` 自己翻页，不要在外面按页调用。
-- 删除、移动、覆盖 strm 之前，先用 `fs list` 或 `fs get` 核对路径。`fs remove` 没有确认，也没有回收站标志。
+- Subcommand results go to stdout. Queries and `config` print indented JSON. `mkdir`, `rename`, `move`, `copy`, `remove`, and `download` print one English success line.
+- Failure exits 1 and writes `{"error":"..."}` to stdout. Warnings go to stderr.
+- `SIGINT` and `SIGTERM` cancel the in-flight request. The HTTP timeout is 30 seconds and has no flag.
+- Remote paths use `/`. Pass absolute paths to `fs`. `fs` does not turn `Movies` into `/Movies`.
+- `--names` for `move`, `copy`, and `remove` is a basename in the source directory, not a full path. Repeat `--names` once per name when a name contains a comma, quote, or newline. The flag is split as CSV.
+- The download URL flag is `--urls` and has no short flag. `-u` is always the server URL.
+- `list` and `search` return one page. Increase `--page` until the collected rows reach `total` or the page is empty. `strm` pages on its own.
+- Before delete, move, or strm overwrite, check the path with `fs list` or `fs get`. `fs remove` has no confirmation and no trash flag.
 
-## 选择命令
+## Choose a command
 
-| 目的 | 命令 |
+| Goal | Command |
 | --- | --- |
-| 看目录一页 | `fs list --path /Movies` |
-| 看目录项 | `fs dirs --path /Movies` |
-| 看一个路径的元数据 | `fs get --path /Movies/a.mkv` |
-| 按关键字搜索 | `fs search --keywords movie` |
-| 建目录 | `fs mkdir --path /STRM` |
-| 改基名 | `fs rename --path /Movies/a.mkv --name b.mkv` |
-| 复制或移动若干基名 | `fs copy` 或 `fs move` 的 `--src`、`--dst`、`--names` |
-| 删除若干基名 | `fs remove --dir /Movies --names a.mkv` |
-| 提交离线下载 | `fs download --path /Downloads --urls 'https://example.com/a' --tool aria2` |
-| 生成 `.strm` | `strm`，先 `--dry-run` |
+| One directory page | `fs list --path /Movies` |
+| Directory entries | `fs dirs --path /Movies` |
+| Metadata for one path | `fs get --path /Movies/a.mkv` |
+| Keyword search | `fs search --keywords movie` |
+| Create a directory | `fs mkdir --path /STRM` |
+| Change a basename | `fs rename --path /Movies/a.mkv --name b.mkv` |
+| Copy or move basenames | `fs copy` or `fs move` with `--src`, `--dst`, and `--names` |
+| Delete basenames | `fs remove --dir /Movies --names a.mkv` |
+| Enqueue an offline download | `fs download --path /Downloads --urls 'https://example.com/a' --tool aria2` |
+| Generate `.strm` files | `strm`, first with `--dry-run` |
 
-`move` 和 `copy` 之前，本客户端不会创建 `--dst`。若因此失败，再执行 `fs mkdir --path <dst>` 后重试。`rename` 的 `--name` 只写新文件名；换目录用 `fs move`。
+This client does not create `--dst` before `move` or `copy`. If the server rejects a missing destination, run `fs mkdir --path <dst>` and retry. `--name` on `rename` is the new filename. Changing directories is `fs move`.
 
-没有上传、下载文件内容、列出离线任务或直接打印播放地址的子命令。播放地址只由 `strm` 写入 `.strm` 文件。`fs download` 只向服务器提交任务，不等待完成。
+There is no subcommand to upload or download file bytes, list offline tasks, or print a playback URL. Playback URLs are written only inside `.strm` files. `fs download` submits a task and does not wait.
 
 ## strm
 
-必填：`--src`、`--dst`、`--base-url`。默认递归、目标类型 `remote`、扩展名 `.mkv,.mp4,.avi,.ts`、8 个并发 worker。
+Required flags: `--src`, `--dst`, and `--base-url`. Defaults are recursive, destination type `remote`, extensions `.mkv,.mp4,.avi,.ts`, and 8 workers.
 
 ```bash
 openlist strm --src /Movies --dst /STRM --base-url https://example.com --dry-run
 openlist strm --src /Movies --dst /STRM --base-url https://example.com --overwrite
 ```
 
-本地目标必须是绝对路径。`./strm` 会被收成 `/strm`，`~` 不会展开。
+A local destination must be an absolute path. `./strm` is cleaned to `/strm`. `~` is not expanded.
 
 ```bash
 openlist strm --src /Movies --dst "$(pwd)/strm" --dst-type local --base-url https://example.com --dry-run
 ```
 
-`--dry-run` 仍会列出服务器；加了 `--sign` 时还会取签名。它不写文件，但成功时仍打印 `Generated N .strm files`。关掉递归用 `--recursive=false`。`--ext ""` 会匹配所有非目录文件。未加 `--overwrite` 时，按路径排序后的第一个已存在目标会使整个命令失败：`target exists: <path> (use --overwrite)`。
+`--dry-run` still lists the server and, with `--sign`, fetches signatures. It writes no files, and on success it still prints `Generated N .strm files`. Disable recursion with `--recursive=false`. `--ext ""` matches every file that is not a directory. Without `--overwrite`, the first existing target in path order fails the whole command: `target exists: <path> (use --overwrite)`.
 
-本客户端不会为远程 `.strm` 创建父目录。`put` 因父目录不存在而失败时，先 `fs mkdir` 再重试。签名、URL 形态和扩展名规则见 [reference.md](reference.md)。
+This client does not create parent directories for remote `.strm` files. If `put` fails because a parent is missing, run `fs mkdir` and retry. Signature, URL, and extension rules are in [reference.md](reference.md).

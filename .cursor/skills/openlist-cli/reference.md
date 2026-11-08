@@ -1,22 +1,22 @@
-# openlist CLI 参考
+# openlist CLI reference
 
-主流程在 [SKILL.md](SKILL.md)。下文的标志、路径和输出与当前源码一致。
+The procedure is in [SKILL.md](SKILL.md). Flags, paths, and output below match the current source.
 
-全局标志可放在子命令前或后。帮助里的 `--url` 默认值只是标志默认值；没有显式传入时，配置文件和环境变量优先。只有标志出现在命令行上才覆盖环境变量。
+Global flags may appear before or after the subcommand. The `--url` default shown in help is only the flag default. When the flag is omitted, the config file and environment win. A flag overrides the environment only when it is present on the command line.
 
-身份检查用 `openlist --help`。正文以 “OpenList CLI is a command line interface” 开头，Available Commands 包含 `completion`、`config`、`fs`、`strm`。`openlist fs --help` 只列出 `fs` 的子命令。
+Identify the binary with `openlist --help`. The text starts with "OpenList CLI is a command line interface", and Available Commands includes `completion`, `config`, `fs`, and `strm`. `openlist fs --help` lists only `fs` subcommands.
 
 ## version
 
-没有 `version` 子命令。根命令上的 `--version` 和 `-v` 打印到 stdout：
+There is no `version` subcommand. Root `--version` and `-v` print to stdout:
 
 ```text
 openlist version dev
 ```
 
-本地 `go build`、`go install .` 和 `go run` 的版本字面量是 `dev`。发布工作流用 `-ldflags "-X openlist/cmd.Version=<tag>"` 写入标签，例如 `openlist version v0.1.0`。
+`go build`, `go install .`, and `go run` keep the literal `dev`. The release workflow injects the tag with `-ldflags "-X openlist/cmd.Version=<tag>"`, for example `openlist version v0.1.0`.
 
-该标志在读取配置之前处理，配置文件损坏时仍然成功，退出码 0。它不是持久标志。`openlist fs --version` 失败，错误原文是 `unknown flag: --version`。`config set` 的 `-v` 只属于那个子命令。
+The flag is handled before config is read, so it succeeds when the config file is invalid and exits 0. It is not a persistent flag. `openlist fs --version` fails with `unknown flag: --version`. On `config set`, `-v` belongs to that subcommand.
 
 ## config
 
@@ -26,47 +26,47 @@ openlist config set [key] [value]
 openlist config list
 ```
 
-`get` 和 `set` 也接受 `--key` / `-k`。`set` 的值用位置参数，或 `--value` / `-v`。
+`get` and `set` also accept `--key` / `-k`. The `set` value is a positional argument or `--value` / `-v`.
 
-成功：
+Success:
 
 ```json
 { "message": "ok" }
 ```
 
-`get url` 输出 `{"url":"..."}`。`get token` 输出 `{"token":"..."}`。`list` 输出 `url` 和 `token`，JSON 键按字母序，token 为明文。
+`get url` prints `{"url":"..."}`. `get token` prints `{"token":"..."}`. `list` prints `url` and `token`. JSON map keys are alphabetical, and the token is plaintext.
 
-错误原文：
+Error strings:
 
-- 缺少键：`key is required`
-- 缺少键或值：`key and value are required`
-- 未知键：`unknown key: <key>`
+- Missing key: `key is required`
+- Missing key or value: `key and value are required`
+- Unknown key: `unknown key: <key>`
 
-写入的 YAML 只有 `url` 和 `token`。`http://example:5244/` 存成 `http://example:5244`。
+The written YAML contains only `url` and `token`. `http://example:5244/` is stored as `http://example:5244`.
 
-## fs 公共行为
+## fs behavior
 
-`fs` 的每个子命令都是 `POST`，`Content-Type: application/json`，`User-Agent: openlist-cli`。token 非空时设置 `Authorization: <token>`。远程 `.strm` 才使用 `PUT /api/fs/put`。
+Every `fs` subcommand is a `POST` with `Content-Type: application/json` and `User-Agent: openlist-cli`. A non-empty token sets `Authorization: <token>`. Remote `.strm` upload is the only `PUT /api/fs/put`.
 
-HTTP 状态码大于等于 400：`api request failed with status <code>: <body>`，响应体最多保留 8 KiB。HTTP 成功但信封 `code` 不是 200：`api error: <message>`，不包含数字 code。传输失败：`failed to send request: ...`。
+HTTP status 400 or higher: `api request failed with status <code>: <body>`. The body is kept up to 8 KiB. HTTP success with an envelope `code` other than 200: `api error: <message>`, without the numeric code. Transport failure: `failed to send request: ...`.
 
-查询命令把信封里的 `data` 缩进打印到 stdout。变更命令打印固定英文句子，末尾有换行。
+Query commands print the envelope `data` as indented JSON on stdout. Mutation commands print one fixed English sentence and a trailing newline.
 
-`list` 和 `dirs` 的条目若缺少 `path` 但有 `name`，客户端会补成 `<目录>/<name>`。
+When a `list` or `dirs` entry has an empty `path` and a non-empty `name`, the client fills `<directory>/<name>`.
 
 ### fs list
 
 `POST /api/fs/list`
 
-| 标志 | 短标志 | 默认 | 请求字段 |
+| Flag | Short | Default | Request field |
 | --- | --- | --- | --- |
 | `--path` | `-p` | `/` | `path` |
-| `--password` | | 空则省略 | `password` |
-| `--refresh` | | false 则省略 | `refresh` |
+| `--password` | | omitted when empty | `password` |
+| `--refresh` | | omitted when false | `refresh` |
 | `--page` | | `1` | `page` |
 | `--per-page` | | `30` | `per_page` |
 
-stdout 是一页目录：
+Stdout is one directory page:
 
 ```json
 {
@@ -79,75 +79,75 @@ stdout 是一页目录：
 }
 ```
 
-`content` 里每个对象的字段：`id`、`path`、`name`、`size`、`is_dir`、`modified`、`created`、`sign`、`thumb`、`type`、`hashinfo`、`mount_details`。`mount_details` 含 `driver_name`、`total_space`、`free_space`。`modified` 和 `created` 是 JSON 时间字符串。客户端按结构体重新编码，服务器省略的零值仍会打印出来。
+Each `content` object has `id`, `path`, `name`, `size`, `is_dir`, `modified`, `created`, `sign`, `thumb`, `type`, `hashinfo`, and `mount_details`. `mount_details` has `driver_name`, `total_space`, and `free_space`. `modified` and `created` are JSON time strings. The client re-encodes the struct, so zero values omitted by the server are still printed.
 
-`--password` 用于服务器要求密码的目录。`--refresh` 发送 `refresh: true`，帮助文本是 “Force refresh”。
+`--password` is for a directory that requires a password. `--refresh` sends `refresh: true`. Its help text is "Force refresh".
 
 ### fs dirs
 
 `POST /api/fs/dirs`
 
-| 标志 | 短标志 | 默认 | 请求字段 |
+| Flag | Short | Default | Request field |
 | --- | --- | --- | --- |
 | `--path` | `-p` | `/` | `path` |
-| `--password` | | 空则省略 | `password` |
-| `--force-root` | | false 则省略 | `force_root` |
+| `--password` | | omitted when empty | `password` |
+| `--force-root` | | omitted when false | `force_root` |
 
-stdout 是 JSON 数组，元素为 `{"name":"...","path":"..."}`。这是服务器的目录项接口，不是本客户端自己的递归遍历。
+Stdout is a JSON array of `{"name":"...","path":"..."}`. This is the server directory endpoint. This client does not walk the tree itself.
 
 ### fs get
 
-`POST /api/fs/get`。`--path` / `-p` 必填。`--password` 可选。stdout 是单个文件对象，字段与 `list` 的 `content` 元素相同。
+`POST /api/fs/get`. `--path` / `-p` is required. `--password` is optional. Stdout is one file object with the same fields as a `list` content entry.
 
 ### fs search
 
 `POST /api/fs/search`
 
-| 标志 | 短标志 | 默认 | 请求字段 |
+| Flag | Short | Default | Request field |
 | --- | --- | --- | --- |
 | `--parent` | `-p` | `/` | `parent` |
-| `--keywords` | `-k` | 必填 | `keywords` |
-| `--scope` | | `0`，且 `0` 不写入 JSON | `scope` |
+| `--keywords` | `-k` | required | `keywords` |
+| `--scope` | | `0`, and `0` is omitted from JSON | `scope` |
 | `--page` | | `1` | `page` |
 | `--per-page` | | `30` | `per_page` |
 
-stdout 为 `{"content":[...],"total":N}`。本客户端不解释 `scope` 的业务含义，非 0 时原样交给服务器。服务器未开启搜索时，失败信息来自服务器的 `message`。
+Stdout is `{"content":[...],"total":N}`. This client does not define what `scope` means. A non-zero value is forwarded as-is. When search is disabled on the server, the failure text is the server `message`.
 
 ### fs mkdir
 
-`POST /api/fs/mkdir`。`--path` / `-p` 必填。成功 stdout：
+`POST /api/fs/mkdir`. `--path` / `-p` is required. Success stdout:
 
 ```text
 Directory created successfully
 ```
 
-客户端不逐级创建父目录。
+The client does not create missing parents one level at a time.
 
 ### fs rename
 
-`POST /api/fs/rename`。`--path` / `-p` 是现有完整路径，`--name` / `-n` 是新基名。成功 stdout：
+`POST /api/fs/rename`. `--path` / `-p` is the existing full path. `--name` / `-n` is the new basename. Success stdout:
 
 ```text
 Renamed successfully
 ```
 
-### fs copy 与 fs move
+### fs copy and fs move
 
-`POST /api/fs/copy` 或 `POST /api/fs/move`。
+`POST /api/fs/copy` or `POST /api/fs/move`.
 
-| 标志 | 短标志 | 请求字段 |
+| Flag | Short | Request field |
 | --- | --- | --- |
 | `--src` | `-s` | `src_dir` |
 | `--dst` | `-d` | `dst_dir` |
 | `--names` | `-n` | `names` |
 
-三个标志都必填。`--src` 和 `--dst` 是目录。`--names` 是该源目录中的基名，可重复传入，或用逗号一次传入多个不含逗号的名字：`--names a.txt,b.txt`。
+All three flags are required. `--src` and `--dst` are directories. `--names` lists basenames in the source directory. Repeat the flag, or pass several comma-free names in one value: `--names a.txt,b.txt`.
 
-成功 stdout 分别为 `Copied successfully` 和 `Moved successfully`。
+Success stdout is `Copied successfully` or `Moved successfully`.
 
 ### fs remove
 
-`POST /api/fs/remove`。`--dir` / `-d` 是目录，`--names` / `-n` 是其中的基名，规则与 copy 相同。可以删除目录名；没有单独的递归标志。成功 stdout：
+`POST /api/fs/remove`. `--dir` / `-d` is the directory. `--names` / `-n` lists basenames in it, with the same splitting rules as copy. A directory basename is allowed. There is no recursive flag. Success stdout:
 
 ```text
 Removed successfully
@@ -155,71 +155,71 @@ Removed successfully
 
 ### fs download
 
-`POST /api/fs/add_offline_download`。
+`POST /api/fs/add_offline_download`.
 
-| 标志 | 短标志 | 默认 | 请求字段 |
+| Flag | Short | Default | Request field |
 | --- | --- | --- | --- |
-| `--path` | `-p` | 必填 | `path` |
-| `--urls` | 无 | 必填 | `urls` |
+| `--path` | `-p` | required | `path` |
+| `--urls` | none | required | `urls` |
 | `--tool` | | `aria2` | `tool` |
 
-`--urls` 的拆分规则与 `--names` 相同。URL 含逗号时重复该标志。`--tool` 原样发送，帮助文本为 “aria2, qbittorrent, etc.”；具体名称必须是服务器已配置的离线下载工具。
+`--urls` splits like `--names`. Repeat the flag when a URL contains a comma. `--tool` is sent unchanged. Its help text is "aria2, qbittorrent, etc." The name must be a tool configured on the server.
 
-成功 stdout：
+Success stdout:
 
 ```text
 Download task added successfully
 ```
 
-没有查询或取消任务的命令。
+There is no command to list or cancel tasks.
 
 ## strm
 
 ```text
-openlist strm --src <远程目录> --dst <目标目录> --base-url <直链前缀> [flags]
+openlist strm --src <remote-dir> --dst <dest-dir> --base-url <direct-link-prefix> [flags]
 ```
 
-| 标志 | 短标志 | 默认 | 作用 |
+| Flag | Short | Default | Role |
 | --- | --- | --- | --- |
-| `--src` | `-s` | 必填 | OpenList 源目录 |
-| `--dst` | `-d` | 必填 | 目标目录 |
-| `--dst-type` | | `remote` | `remote` 或 `local` |
-| `--base-url` | | 必填 | 直链前缀，末尾 `/` 会去掉 |
-| `--ext` | | `.mkv,.mp4,.avi,.ts` | 逗号分隔，大小写不敏感，点可省略 |
-| `--recursive` | | true | `--recursive=false` 只扫源目录本层 |
-| `--overwrite` | | false | 覆盖已有 `.strm` |
-| `--dry-run` | | false | 列出动作，不写文件 |
-| `--sign` | | false | 直链追加 `sign` 查询参数 |
-| `--concurrency` | | `8` | 列目录和补签名的并行数；小于等于 0 时仍用 8 |
+| `--src` | `-s` | required | OpenList source directory |
+| `--dst` | `-d` | required | Destination directory |
+| `--dst-type` | | `remote` | `remote` or `local` |
+| `--base-url` | | required | Direct-link prefix; trailing `/` is removed |
+| `--ext` | | `.mkv,.mp4,.avi,.ts` | Comma-separated; case-insensitive; a leading dot is optional |
+| `--recursive` | | true | `--recursive=false` scans only the source directory |
+| `--overwrite` | | false | Replace an existing `.strm` |
+| `--dry-run` | | false | Print actions and write nothing |
+| `--sign` | | false | Append a `sign` query parameter |
+| `--concurrency` | | `8` | Listing and sign-fetch workers; `0` or less still uses 8 |
 
-非法目标类型：`invalid --dst-type "<value>" (expected remote or local)`。
+An invalid destination type produces `invalid --dst-type "<value>" (expected remote or local)`.
 
-源路径和远程目标会收成绝对远程路径：`Movies` 变成 `/Movies`。本地 `--dst` 也走同一清洗，所以必须传入绝对本地路径。`./strm` 会变成 `/strm`，`~/strm` 会变成 `/~/strm`。
+Source and remote destination paths are cleaned to absolute remote paths: `Movies` becomes `/Movies`. A local `--dst` uses the same cleaner, so pass an absolute local path. `./strm` becomes `/strm`. `~/strm` becomes `/~/strm`.
 
-扩展名映射：`/Movies/A/B.mkv`、源 `/Movies`、目标 `/STRM` 得到 `/STRM/A/B.strm`。空的 `--ext` 匹配所有文件。目录始终不生成 strm。默认扩展名之外的文件被跳过。
+Extension mapping: `/Movies/A/B.mkv` with source `/Movies` and destination `/STRM` becomes `/STRM/A/B.strm`. An empty `--ext` matches every file. Directories never become strm files. Extensions outside the filter are skipped.
 
-遍历每页 200 条，按路径去重，结果按路径升序处理。遇到错误即停止，不继续写后面的文件。
+The walk requests 200 entries per page, deduplicates paths, and processes results in ascending path order. The first error stops the command. Later files are not written.
 
-直链形态：`<base-url>/d` 加上逐段百分号编码的路径。`/A B/测试.mkv` 编码为 `/A%20B/%E6%B5%8B%E8%AF%95.mkv`。有签名时追加 `?sign=`，签名再做查询编码，`sig+n` 变成 `sig%2Bn`。
+A direct link is `<base-url>/d` plus the path with each segment percent-encoded. `/A B/测试.mkv` encodes as `/A%20B/%E6%B5%8B%E8%AF%95.mkv`. A signature adds `?sign=` with the signature query-encoded, so `sig+n` becomes `sig%2Bn`.
 
-`--sign` 优先使用 `list` 返回的 `sign`。缺失时再 `POST /api/fs/get` 取 `sign`。最终签名仍为空时，直链不带查询参数。
+`--sign` uses `sign` from `list` when it is present. Otherwise it calls `POST /api/fs/get`. An empty final signature leaves the link without a query string.
 
-文件内容是直链加一个换行。远程写入是 `PUT /api/fs/put`，`Content-Type: application/octet-stream`，`File-Path` 头为整条目标路径的 `PathEscape`。远程父目录不会被此客户端创建。未覆盖时，`get` 成功视为已存在并失败：`target exists: <path> (use --overwrite)`。`get` 失败则继续 `put`，因此认证错误会在 `put` 上再次出现。
+File content is the direct link plus one newline. Remote write is `PUT /api/fs/put` with `Content-Type: application/octet-stream`. The `File-Path` header is `PathEscape` of the whole target path. This client does not create the remote parent. Without overwrite, a successful `get` is treated as "already exists" and fails with `target exists: <path> (use --overwrite)`. A failed `get` continues to `put`, so an auth error appears again on `put`.
 
-本地写入使用操作系统路径，父目录权限 `0755`，文件权限 `0644`。已存在且未覆盖时同样报 `target exists`。
+Local writes use the operating-system path. Parent directories are mode `0755` and files are mode `0644`. An existing file without overwrite returns the same `target exists` error.
 
-stdout：
+Stdout:
 
 ```text
 [dry-run] /Movies/movie.mkv -> /STRM/movie.strm
 Generated 1 .strm files
 ```
 
-正式写入只有最后的 `Generated N .strm files`。`N` 包含 dry-run 计到的文件，0 个匹配也会打印 `Generated 0 .strm files`。
+A real write prints only the final `Generated N .strm files`. `N` includes files counted by dry-run. Zero matches still print `Generated 0 .strm files`.
 
-## 失败输出
+## Failure output
 
-`main` 把错误编成缩进 JSON 写到 stdout，然后以状态码 1 退出：
+`main` encodes the error as indented JSON on stdout and exits 1:
 
 ```json
 {
@@ -227,17 +227,17 @@ Generated 1 .strm files
 }
 ```
 
-配置文件存在但 YAML 无法解析时，任何真正的子命令都失败，标志无法绕过：
+When the config file exists but is invalid YAML, every real subcommand fails. Flags cannot bypass it:
 
 ```text
 failed to load config: failed to read config file: ...
 ```
 
-文件不存在是正常状态，随后使用默认值、环境变量和标志。
+A missing file is normal. Defaults, environment variables, and flags are then used.
 
-## 端到端序列
+## End-to-end sequence
 
-把 `<token>` 换成用户提供的 token。下面假设二进制是仓库内的 `./openlist`，且当前 shell 没有 `OPENLIST_URL` 或 `OPENLIST_TOKEN`。
+Replace `<token>` with the token supplied for the task. This assumes the binary is `./openlist` in the repo and the shell has neither `OPENLIST_URL` nor `OPENLIST_TOKEN`.
 
 ```bash
 go build -o openlist .
@@ -256,15 +256,15 @@ env -u OPENLIST_URL -u OPENLIST_TOKEN ./openlist config set token '<token>'
 ./openlist fs remove --dir /Archive --names new.mkv
 ```
 
-临时指向另一台服务器：
+Point one command at another server:
 
 ```bash
 ./openlist --url http://other:5244 --token '<token>' fs get --path /Movies
 ```
 
-发布归档的 sha256 在同一次 Release 的 `checksums.txt`，由 `sha256sum` 生成。资产覆盖 `linux`、`darwin`、`windows` 与 `amd64`、`arm64`。仓库里的 `dist/` 是本地发布脚本的输出目录，已在 `.gitignore` 中，不是安装步骤的一部分。
+Release sha256 lines are in that release's `checksums.txt`, produced by `sha256sum`. Assets cover `linux`, `darwin`, and `windows`, each with `amd64` and `arm64`. `dist/` in the repo is local release-script output, is gitignored, and is not an install step.
 
-需要新的源码检出时，README 中的克隆命令是：
+The README clone commands for a new checkout are:
 
 ```bash
 git clone git@github.com:0xtaichim/openlist.git
@@ -272,4 +272,4 @@ cd openlist
 go build -o openlist .
 ```
 
-克隆地址以该仓库 README 为准。module 路径仍是 `openlist`，构建始终在检出目录内进行。
+Use the clone URL from this repository's README. The module path remains `openlist`. Build inside the checkout.
