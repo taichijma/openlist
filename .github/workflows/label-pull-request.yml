@@ -1,0 +1,23 @@
+name: Label pull requests
+
+on:
+  pull_request:
+    types: [opened, edited, reopened]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  label:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Label for release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/pr_labels.py

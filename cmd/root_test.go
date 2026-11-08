@@ -6,6 +6,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"openlist/cmd"
 )
 
 func TestRootCmdConfigFileUsed(t *testing.T) {
@@ -74,6 +76,18 @@ func TestHelpIsAvailable(t *testing.T) {
 	mustOK(t, err)
 	if !strings.Contains(out, "OpenList") {
 		t.Fatalf("help output: %q", out)
+	}
+}
+
+func TestVersionFlag(t *testing.T) {
+	isolateConfig(t)
+	out, stderr, err := execCLI(t, "--version")
+	mustOK(t, err)
+	if stderr != "" {
+		t.Fatalf("stderr: %q", stderr)
+	}
+	if !strings.Contains(out, cmd.Version) {
+		t.Fatalf("version output: %q", out)
 	}
 }
 

@@ -46,6 +46,36 @@ openlist strm --src /Movies --dst /STRM --base-url https://example.com
 openlist strm --src /Movies --dst ./strm --dst-type local --base-url https://example.com --dry-run
 ```
 
+## Release
+
+Push a semantic version tag to publish a GitHub Release. The workflow tests
+this module, attaches Linux, macOS, and Windows binaries, and writes the
+release notes from pull requests merged since the previous tag.
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+`openlist --version` prints that tag for a release build, and `dev` for a
+local build. A tag such as `v0.1.0-rc.1` is published as a pre-release.
+Re-running the workflow replaces the binaries and keeps notes that are
+already written.
+
+Pull requests are grouped with labels. A title that follows
+[Conventional Commits](https://www.conventionalcommits.org/) is labeled
+when the pull request is opened or edited:
+
+| Pull request title | Release notes section |
+| --- | --- |
+| `feat:` | Features |
+| `fix:` | Bug fixes |
+| `docs:` | Documentation |
+| `feat!:`, `fix!:`, or a `BREAKING CHANGE:` footer | Breaking changes |
+
+Other merged pull requests are listed under Other changes. Add the
+`ignore-for-release` label to leave one out.
+
 ## License
 
 MIT

@@ -15,6 +15,7 @@ Thumbs.db
 # Go binaries and plugins
 /openlist
 /openlist.exe
+/dist/
 *.exe
 *.exe~
 *.dll
@@ -24,6 +25,8 @@ Thumbs.db
 # Test binaries and coverage
 *.test
 *.out
+__pycache__/
+*.pyc
 coverage.*
 *.coverprofile
 profile.cov
