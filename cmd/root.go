@@ -29,6 +29,7 @@ func NewRootCmd() *cobra.Command {
 		Short: "A CLI tool for OpenList",
 		Long: `OpenList CLI is a command line interface for managing files
 and directories on your OpenList server.`,
+		Version:       Version,
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
